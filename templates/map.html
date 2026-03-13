@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CrimeWatch — Heatmap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .map-container {
+            width: 100%;
+            height: calc(100vh - 60px);
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">🚨 CrimeWatch</div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/map">Heatmap</a>
+            <a href="/dashboard">Dashboard</a>
+        </div>
+    </nav>
+    <iframe src="{{ url_for('static', filename='map.html') }}"
+            class="map-container">
+    </iframe>
+</body>
+</html>

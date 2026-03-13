@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrimeWatch — Predictive Hotspot System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav>
+        <div class="logo">🚨 CrimeWatch</div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/map">Heatmap</a>
+            <a href="/dashboard">Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <h1>AI-Powered Crime<br><span>Hotspot Detection</span></h1>
+        <p>Real-time predictive analysis to help law enforcement
+           allocate resources and prevent crime before it happens.</p>
+        <div class="cta-buttons">
+            <a href="/map" class="btn-primary">View Live Heatmap</a>
+            <a href="/dashboard" class="btn-secondary">View Analytics</a>
+        </div>
+    </section>
+
+    <!-- Stats Cards -->
+    <section class="stats">
+        <div class="card">
+            <h2>{{ stats.total_crimes }}</h2>
+            <p>Total Crimes Analyzed</p>
+        </div>
+        <div class="card">
+            <h2>{{ stats.top_crime }}</h2>
+            <p>Most Common Crime</p>
+        </div>
+        <div class="card">
+            <h2>{{ stats.peak_hour }}:00</h2>
+            <p>Peak Crime Hour</p>
+        </div>
+        <div class="card">
+            <h2>{{ stats.accuracy }}</h2>
+            <p>Model Accuracy</p>
+        </div>
+        <div class="card">
+            <h2>{{ stats.total_clusters }}</h2>
+            <p>Hotspot Clusters Found</p>
+        </div>
+    </section>
+
+    <!-- Predict Section -->
+    <section class="predict-section">
+        <h2>🔮 Predict Crime Type</h2>
+        <p>Enter location and time to predict likely crime type</p>
+        <div class="predict-form">
+            <input type="number" id="hour" placeholder="Hour (0-23)" min="0" max="23">
+            <input type="number" id="day" placeholder="Day (0=Mon, 6=Sun)" min="0" max="6">
+            <input type="number" id="month" placeholder="Month (1-12)" min="1" max="12">
+            <input type="number" id="lat" placeholder="Latitude" step="0.0001">
+            <input type="number" id="lon" placeholder="Longitude" step="0.0001">
+            <button onclick="predictCrime()">Predict</button>
+        </div>
+        <div id="prediction-result"></div>
+    </section>
+
+    <script>
+    async function predictCrime() {
+        const payload = {
+            hour : parseInt(document.getElementById('hour').value),
+            day  : parseInt(document.getElementById('day').value),
+            month: parseInt(document.getElementById('month').value),
+            lat  : parseFloat(document.getElementById('lat').value),
+            lon  : parseFloat(document.getElementById('lon').value)
+        };
+
+        // Show loading
+        document.getElementById('prediction-result').innerHTML =
+            '<div class="result-box">⏳ Analyzing location...</div>';
+
+        const res  = await fetch('/predict', {
+            method : 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body   : JSON.stringify(payload)
+        });
+        const data = await res.json();
+        const s    = data.summary;
+
+        // Build breakdown table
+        let breakdownHTML = '';
+        for (const [crime, count] of Object.entries(s.breakdown)) {
+            breakdownHTML += `
+                <tr>
+                    <td>${crime}</td>
+                    <td style="color:#ff4444; font-weight:bold;">${count} cases</td>
+                </tr>`;
+        }
+
+        document.getElementById('prediction-result').innerHTML = `
+            <div class="result-box">
+                <h3 style="color:#ff4444; font-size:1.3rem; margin-bottom:1rem;">
+                    ⚠️ Predicted Crime: ${data.predicted_crime}
+                </h3>
+
+                <hr style="border-color:#ff444433; margin-bottom:1rem;">
+
+                <h4 style="color:#aaa; margin-bottom:1rem;">
+                    📍 Location Crime Summary
+                </h4>
+
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="summary-label">🔴 Total Crimes Nearby</span>
+                        <span class="summary-value">${s.total_crimes}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">☠️ Most Common Crime</span>
+                        <span class="summary-value">${s.top_crime}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">🕐 Peak Hour</span>
+                        <span class="summary-value">${s.peak_hour}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">📅 Peak Month</span>
+                        <span class="summary-value">${s.peak_month}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">⚠️ Risk Level</span>
+                        <span class="summary-value">${s.risk_level}</span>
+                    </div>
+                </div>
+
+                <hr style="border-color:#ff444433; margin: 1rem 0;">
+
+                <h4 style="color:#aaa; margin-bottom:0.8rem;">
+                    📊 Crime Breakdown (Top 3)
+                </h4>
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="color:#aaa; font-size:0.85rem;">
+                            <th style="text-align:left; padding:0.3rem;">Crime Type</th>
+                            <th style="text-align:left; padding:0.3rem;">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>${breakdownHTML}</tbody>
+                </table>
+            </div>`;
+    }
+</script>
+</body>
+</html>

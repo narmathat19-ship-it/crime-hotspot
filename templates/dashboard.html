@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CrimeWatch — Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .chart-box {
+            background: #1a1a2e;
+            border: 1px solid #ff444433;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .chart-box h3 {
+            color: #ff4444;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .page-title {
+            text-align: center;
+            padding: 2rem;
+            font-size: 2rem;
+        }
+        .page-title span { color: #ff4444; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">🚨 CrimeWatch</div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/map">Heatmap</a>
+            <a href="/dashboard">Dashboard</a>
+        </div>
+    </nav>
+
+    <h2 class="page-title">📊 Crime <span>Analytics Dashboard</span></h2>
+
+    <div class="charts-grid">
+
+        <div class="chart-box">
+            <h3>🔴 Top Crime Types</h3>
+            <canvas id="crimeChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <h3>🕐 Crimes by Hour of Day</h3>
+            <canvas id="hourChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <h3>📅 Crimes by Day of Week</h3>
+            <canvas id="dailyChart"></canvas>
+        </div>
+
+        <div class="chart-box" style="display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1rem;">
+            <h3>📌 Quick Stats</h3>
+            <p style="font-size:1.1rem;">Total Records: <strong style="color:#ff4444">{{ crime_values|sum }}</strong></p>
+            <p style="font-size:1.1rem;">Crime Types Tracked: <strong style="color:#ff4444">{{ crime_labels|length }}</strong></p>
+            <p style="font-size:1.1rem;">Peak Hour: <strong style="color:#ff4444">{{ hour_labels[hour_values.index(hour_values|max)] }}:00</strong></p>
+            <p style="font-size:1.1rem;">Busiest Day: <strong style="color:#ff4444">{{ daily_labels[daily_values.index(daily_values|max)] }}</strong></p>
+        </div>
+
+    </div>
+
+    <script>
+        const chartDefaults = {
+            plugins: { legend: { labels: { color: 'white' } } },
+            scales: {
+                x: { ticks: { color: '#aaa' }, grid: { color: '#ffffff11' } },
+                y: { ticks: { color: '#aaa' }, grid: { color: '#ffffff11' } }
+            }
+        };
+
+        new Chart(document.getElementById('crimeChart'), {
+            type: 'bar',
+            data: {
+                labels: {{ crime_labels | tojson }},
+                datasets: [{
+                    label: 'Count',
+                    data: {{ crime_values | tojson }},
+                    backgroundColor: '#ff444488',
+                    borderColor: '#ff4444',
+                    borderWidth: 1
+                }]
+            },
+            options: chartDefaults
+        });
+
+        new Chart(document.getElementById('hourChart'), {
+            type: 'line',
+            data: {
+                labels: {{ hour_labels | tojson }},
+                datasets: [{
+                    label: 'Crimes',
+                    data: {{ hour_values | tojson }},
+                    borderColor: '#4488ff',
+                    backgroundColor: '#4488ff22',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: chartDefaults
+        });
+
+        new Chart(document.getElementById('dailyChart'), {
+            type: 'bar',
+            data: {
+                labels: {{ daily_labels | tojson }},
+                datasets: [{
+                    label: 'Crimes',
+                    data: {{ daily_values | tojson }},
+                    backgroundColor: '#ff880088',
+                    borderColor: '#ff8800',
+                    borderWidth: 1
+                }]
+            },
+            options: chartDefaults
+        });
+    </script>
+</body>
+</html>
